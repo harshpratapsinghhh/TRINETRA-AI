@@ -1,0 +1,111 @@
+/* Global Styling */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #0f0f0f;
+    color: #fff;
+}
+
+/* Navbar */
+nav {
+    background: #1a1a1a;
+    padding: 20px;
+    text-align: center;
+    border-bottom: 2px solid #333;
+}
+
+nav h1 {
+    margin: 0;
+    font-size: 32px;
+    letter-spacing: 1px;
+    color: #4da6ff;
+}
+
+nav .tagline {
+    margin-top: 5px;
+    font-size: 14px;
+    color: #ccc;
+}
+
+/* Main container */
+.container {
+    width: 90%;
+    margin: 30px auto;
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    grid-gap: 30px;
+}
+
+/* Video stream block */
+.video-card {
+    background: #1b1b1b;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid #333;
+}
+
+.video-card h2 {
+    margin-bottom: 15px;
+    color: #4da6ff;
+}
+
+#video-stream {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    border: 1px solid #444;
+}
+
+/* Controls panel */
+.controls {
+    background: #1b1b1b;
+    padding: 20px;
+    border-radius: 10px;
+    height: fit-content;
+    border: 1px solid #333;
+}
+
+.controls h2 {
+    margin-bottom: 15px;
+    color: #4da6ff;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    background: #4da6ff;
+    color: #000;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+button:hover {
+    background: #80c1ff;
+}
+
+/* Logs area */
+.logs {
+    grid-column: span 2;
+    background: #1b1b1b;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid #333;
+}
+
+.logs h2 {
+    margin-bottom: 10px;
+    color: #4da6ff;
+}
+
+#status-box {
+    background: #111;
+    padding: 15px;
+    border-radius: 6px;
+    font-size: 14px;
+    border: 1px solid #444;
+}
