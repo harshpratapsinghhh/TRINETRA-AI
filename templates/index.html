@@ -17,14 +17,15 @@
 
         <div class="video-card">
             <h2>Live Camera Stream</h2>
-            <img id="video-stream" src="/video_feed" alt="Camera Stream" />
+            <!-- Default stream can be blank -->
+            <img id="video-stream" src="" alt="Camera Stream" />
         </div>
 
         <div class="controls">
             <h2>Controls</h2>
-            <button onclick="location.href='/start_object_detection'">Start Object Detection</button>
-            <button onclick="location.href='/start_attendance'">Start Attendance System</button>
-            <button onclick="location.href='/stop'">Stop Camera</button>
+            <button onclick="startObjectDetection()">Start Object Detection</button>
+            <button onclick="startAttendance()">Start Attendance System</button>
+            <button onclick="stopCamera()">Stop Camera</button>
         </div>
 
         <div class="logs">
@@ -35,6 +36,26 @@
         </div>
 
     </div>
+
+    <script>
+    // Function to start Object Detection stream
+    function startObjectDetection() {
+        document.getElementById('video-stream').src = '/start_object_detection';
+        document.getElementById('status-box').innerText = 'Mode: OBJECT DETECTION';
+    }
+
+    // Function to start Attendance stream
+    function startAttendance() {
+        document.getElementById('video-stream').src = '/start_attendance';
+        document.getElementById('status-box').innerText = 'Mode: ATTENDANCE';
+    }
+
+    // Function to stop the stream
+    function stopCamera() {
+        document.getElementById('video-stream').src = '';
+        document.getElementById('status-box').innerText = 'System Ready. Choose a mode to begin.';
+    }
+    </script>
 
 </body>
 </html>
