@@ -3,13 +3,13 @@ import cv2
 from ultralytics import YOLO
 import threading
 import os
-from attendance_module.attendance import attendance_stream  # import attendance stream
+from attendance_module.attendance import attendance_stream 
 
 app = Flask(__name__)
 
-# ---------- Load YOLO Model in background ----------
+# Load YOLO Model in background
 yolo_model = None
-MODEL_PATH = os.path.join("models", "yolov8n.pt")  # fastest model
+MODEL_PATH = os.path.join("models", "yolov8n.pt")
 
 def load_yolo():
     global yolo_model
@@ -19,7 +19,7 @@ def load_yolo():
 threading.Thread(target=load_yolo).start()
 
 
-# ---------- Object Detection Stream ----------
+# Object Detection Stream
 def detection_stream():
     cam = cv2.VideoCapture(0)
     cam.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
@@ -31,7 +31,7 @@ def detection_stream():
             break
 
         if yolo_model:
-            results = yolo_model(frame, classes=[0,1,2,3,5,7])  # person, car, bus, animal
+            results = yolo_model(frame, classes=[0,1,2,3,5,7])
             annotated = results[0].plot()
         else:
             annotated = frame
@@ -46,7 +46,7 @@ def detection_stream():
     cam.release()
 
 
-# ---------- Routes ----------
+# Routes
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -66,7 +66,6 @@ def start_attendance():
 
 @app.route("/stop")
 def stop_camera():
-    # Client-side will stop stream automatically by navigating away
     return render_template("index.html")
 
 
