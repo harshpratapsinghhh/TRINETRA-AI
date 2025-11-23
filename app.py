@@ -18,7 +18,6 @@ def load_yolo():
 
 threading.Thread(target=load_yolo).start()
 
-
 # Object Detection Stream
 def detection_stream():
     cam = cv2.VideoCapture(0)
@@ -71,3 +70,4 @@ def stop_camera():
 
 if __name__ == "__main__":
     app.run(debug=True)
+ 
