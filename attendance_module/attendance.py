@@ -8,27 +8,31 @@ import os
 MODEL_PATH = os.path.join("models", "yolov8s.pt")
 ATTENDANCE_FILE = os.path.join("logs", "attendance.csv")
 
-# Checks for csv
+# Ensure attendance CSV exists
 if not os.path.exists(ATTENDANCE_FILE):
     with open(ATTENDANCE_FILE, 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow(["Name", "Date", "Time"])
 
+# Load model
 model = YOLO(MODEL_PATH)
 
-# To avoid duplicate attendance  
+# To prevent duplicate attendance
 marked = set()
 
 def mark_attendance(name):
+    """Mark attendance once per person per session."""
     if name not in marked:
         now = datetime.now()
         date = now.strftime("%Y-%m-%d")
-        current_time = now.strftime("%H:%M:%S")
+        time_now = now.strftime("%H:%M:%S")
+
         with open(ATTENDANCE_FILE, 'a', newline='') as f:
             writer = csv.writer(f)
-            writer.writerow([name, date, current_time])
+            writer.writerow([name, date, time_now])
+
         marked.add(name)
-        print(f"[ATTENDANCE] {name} marked at {current_time}")
+        print(f"[ATTENDANCE] {name} marked at {time_now}")
 
 def attendance_stream():
     cam = cv2.VideoCapture(0)
@@ -42,33 +46,39 @@ def attendance_stream():
         if not ret:
             break
 
-        # Detect objects
+        # Run YOLO object detection
         results = model(frame, conf=0.5, verbose=False)
 
-        # Verify multiple person 
-        verifying_idx = 1
+        verifying_idx = 1  # Track which person is being verified
 
         for res in results:
             boxes = res.boxes
-            for box, cls in zip(boxes.xyxy, boxes.cls):
-                name = model.names[int(cls)]
-                if name == "person":  # people name
+
+            for box in boxes:
+                cls_id = int(box.cls[0])
+                name = model.names[cls_id]  # class label from YOLO
+
+                if name == "person":
+                    # MARK ATTENDANCE
                     mark_attendance(name)
-                    
-                    # Bounding box
-                    x1, y1, x2, y2 = map(int, box)
+
+                    # Bounding box drawing
+                    x1, y1, x2, y2 = map(int, box.xyxy[0])
                     cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
-                    # Put name and verifying index
-                    cv2.putText(frame, f"{name} (Verifying {verifying_idx})", 
+                    # Verification label
+                    cv2.putText(frame, f"{name} (Verifying {verifying_idx})",
                                 (x1, y1 - 10), font, 0.7, (0, 255, 0), 2)
+
                     verifying_idx += 1
 
+        # Mode label on top-left
         cv2.putText(frame, "Mode: ATTENDANCE", (10, 30), font, 1, (0, 255, 255), 2)
 
-        # Flask streaming
+        # Encode for Flask
         _, buffer = cv2.imencode('.jpg', frame)
         frame_bytes = buffer.tobytes()
+
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
