@@ -6,37 +6,25 @@ import os
 import csv
 from keras_facenet import FaceNet
 
-# ======================================================
 # GLOBALS
-# ======================================================
 yolo_model = None
 
 def set_yolo_model(model):
     global yolo_model
     yolo_model = model
 
-
-# ======================================================
-# PATHS (AUTO HANDLED)
-# ======================================================
-BASE_DIR = os.path.dirname(__file__)                       # attendance_module/
+# PATHS
+BASE_DIR = os.path.dirname(__file__)  # attendance_module/ will be there 
 MODEL_PATH = os.path.join("models", "yolov8s.pt")
 STUDENT_DATA = os.path.join(BASE_DIR, "student_data.csv")
 ATTENDANCE_FILE = os.path.join("logs", "attendance.csv")
 
-# ======================================================
 # LOAD YOLO
-# ======================================================
-yolo = YOLO(MODEL_PATH)
+yolo = YOLO(MODEL_PATH) # now this will give model path in var yolo
 
-# ======================================================
-# LOAD FaceNet
-# ======================================================
-embedder = FaceNet()
+embedder = FaceNet() # for FaceNet 
 
-# ======================================================
-# LOAD STUDENT DATABASE (CSV)
-# ======================================================
+# LOAD STUDENT DATABASE (i.e in .csv format)
 known_encodings = []
 known_ids = []
 known_names = []
@@ -44,7 +32,6 @@ known_names = []
 with open(STUDENT_DATA, "r", encoding="utf-8") as f:
     reader = csv.DictReader(f)
 
-    # FIX BOM + SPACES
     reader.fieldnames = [name.strip().replace('\ufeff', '') for name in reader.fieldnames]
 
     for row in reader:
@@ -68,10 +55,7 @@ with open(STUDENT_DATA, "r", encoding="utf-8") as f:
 
 print("\n[STUDENTS LOADED]:", known_names)
 
-
-# ======================================================
 # ENSURE ATTENDANCE CSV EXISTS
-# ======================================================
 if not os.path.exists(ATTENDANCE_FILE):
     with open(ATTENDANCE_FILE, "w", newline="") as f:
         writer = csv.writer(f)
@@ -80,10 +64,8 @@ if not os.path.exists(ATTENDANCE_FILE):
 # Prevent double marking in one session
 marked = set()
 
-
-# ======================================================
 # ATTENDANCE STREAM
-# ======================================================
+
 def attendance_stream():
     cam = cv2.VideoCapture(0)
     font = cv2.FONT_HERSHEY_SIMPLEX
@@ -93,14 +75,14 @@ def attendance_stream():
         if not ret:
             break
 
-        results = yolo_model(frame, classes=[0])  # Only person class
+        results = yolo_model(frame, classes=[0]) 
 
         for r in results:
             for box in r.boxes:
                 cls = int(box.cls[0])
                 cls_name = yolo.names[cls]
 
-                if cls_name == "person":
+                if cls_name == "person":  # Only person class
 
                     x1, y1, x2, y2 = map(int, box.xyxy[0])
 
