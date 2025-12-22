@@ -5,6 +5,9 @@ from datetime import datetime
 import os
 import csv
 from keras_facenet import FaceNet
+import threading
+from datetime import timedelta
+import pyttsx3
 
 # GLOBALS
 yolo_model = None
@@ -55,6 +58,13 @@ with open(STUDENT_DATA, "r", encoding="utf-8") as f:
 
 print("\n[STUDENTS LOADED]:", known_names)
 
+# Threading
+def speak_async(text):
+    def _speak():
+        engine.say(text)
+        engine.runAndWait()
+    threading.Thread(target=_speak, daemon=True).start()
+
 # ENSURE ATTENDANCE CSV EXISTS
 if not os.path.exists(ATTENDANCE_FILE):
     with open(ATTENDANCE_FILE, "w", newline="") as f:
@@ -62,7 +72,12 @@ if not os.path.exists(ATTENDANCE_FILE):
         writer.writerow(["Student_ID", "Name", "Date", "Time"])
 
 # Prevent double marking in one session
-marked = set()
+
+MARK_DURATION = timedelta(hours=2) # here set duration of attendance
+last_marked = {}
+
+engine = pyttsx3.init()
+engine.setProperty("rate", 170)
 
 # ATTENDANCE STREAM
 
@@ -70,7 +85,13 @@ def attendance_stream():
     cam = cv2.VideoCapture(0)
     font = cv2.FONT_HERSHEY_SIMPLEX
 
+    process_frame = True    
+
     while True:
+        process_frame = not process_frame
+        if not process_frame:
+            continue
+
         ret, frame = cam.read()
         if not ret:
             break
@@ -88,11 +109,15 @@ def attendance_stream():
 
                     # Crop face from person box
                     face = frame[y1:y2, x1:x2]
-                    if face.size == 0:
+
+                    if face is None or face.size == 0:
                         continue
 
-                    face_rgb = cv2.cvtColor(face, cv2.COLOR_BGR2RGB)
-
+                    try:
+                        face_rgb = cv2.cvtColor(face, cv2.COLOR_BGR2RGB)
+                        face_rgb = cv2.resize(face_rgb, (160, 160))
+                    except:
+                        continue
                     emb = embedder.embeddings([face_rgb])[0]
 
                     # Calculate distances
@@ -109,19 +134,29 @@ def attendance_stream():
                         student_name = "Unknown"
 
                     # Mark only once
-                    if student_id != "Unknown" and student_id not in marked:
-                        marked.add(student_id)
-
+                    if student_id != "Unknown":
                         now = datetime.now()
-                        with open(ATTENDANCE_FILE, "a", newline="") as f:
-                            w = csv.writer(f)
-                            w.writerow([
-                                student_id,
-                                student_name,
-                                now.strftime("%Y-%m-%d"),
-                                now.strftime("%H:%M:%S")
-                            ])
-                        print(f"[ATTENDANCE] {student_id} - {student_name}")
+                        last_time = last_marked.get(student_id)
+
+                        if last_time is None or now - last_time >= MARK_DURATION:
+                            last_marked[student_id] = now
+
+                            with open(ATTENDANCE_FILE, "a", newline="") as f:
+                                w = csv.writer(f)
+                                w.writerow([
+                                    student_id,
+                                    student_name,
+                                    now.strftime("%Y-%m-%d"),
+                                    now.strftime("%H:%M:%S")
+                                ])
+
+                            speak_async("Attendance marked")
+
+                            print(f"[ATTENDANCE] {student_id} - {student_name}")
+                            
+                        else:
+                            speak_async("Duplicate attendance")
+
 
                     # Draw Overlay
                     cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
